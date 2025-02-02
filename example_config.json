@@ -1,0 +1,31 @@
+{
+  "birth_date": "1990-01-01",
+  "total_investments_today": 100000,
+  "monthly_investment": 1000,
+  "annual_rate_acc": 5.0,
+  "retirement_age": 65,
+  "life_expectancy": 90,
+  "annual_rate_ret": 3.0,
+  "strategy_mode": "Retirada Baseada em Estratégia",
+  "strategy_type": "Renda Perpétua (Preservar o Principal)",
+  "income_sources": [
+    {
+      "name": "Aposentadoria INSS",
+      "monthly_income": 3000,
+      "income_start_age": 65,
+      "lifetime": true,
+      "duration_years": null,
+      "annual_rate": 0.0,
+      "monthly_rate": 0.0
+    },
+    {
+      "name": "Aluguel",
+      "monthly_income": 2000,
+      "income_start_age": 60,
+      "lifetime": true,
+      "duration_years": null,
+      "annual_rate": 1.0,
+      "monthly_rate": 0.0008298410534239196
+    }
+  ]
+} 
