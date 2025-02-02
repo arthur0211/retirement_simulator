@@ -23,8 +23,8 @@ Um simulador interativo e visual para planejamento financeiro de aposentadoria, 
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/seu-usuario/retirement-simulator.git
-cd retirement-simulator
+git clone https://github.com/arthur0211/retirement_simulator.git
+cd retirement_simulator
 ```
 
 2. Crie um ambiente virtual (recomendado):
@@ -123,7 +123,7 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 
 ## 👥 Autores
 
-- **Seu Nome** - *Desenvolvimento Inicial* - [@seu-usuario](https://github.com/seu-usuario)
+- **Arthur Andrade** - *Desenvolvimento Inicial* - [@arthur0211](https://github.com/arthur0211)
 
 ## 🙏 Agradecimentos
 
@@ -133,8 +133,7 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 
 ## 📞 Suporte
 
-- Abra uma [Issue](https://github.com/seu-usuario/retirement-simulator/issues)
-- Envie um email para [seu-email@exemplo.com]
+- Abra uma [Issue](https://github.com/arthur0211/retirement_simulator/issues)
 
 ---
-⌨️ com ❤️ por [Seu Nome](https://github.com/seu-usuario) 
+⌨️ com ❤️ por [Arthur Andrade](https://github.com/arthur0211)
