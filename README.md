@@ -123,17 +123,11 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 
 ## 👥 Autores
 
-- **Arthur Andrade** - *Desenvolvimento Inicial* - [@arthur0211](https://github.com/arthur0211)
-
-## 🙏 Agradecimentos
-
-- Streamlit pela excelente framework
-- Plotly pela biblioteca de visualização
-- Todos os contribuidores e usuários
+- **Arthur Amorim** - *Desenvolvimento Inicial* - [@arthur0211](https://github.com/arthur0211)
 
 ## 📞 Suporte
 
 - Abra uma [Issue](https://github.com/arthur0211/retirement_simulator/issues)
 
 ---
-⌨️ com ❤️ por [Arthur Andrade](https://github.com/arthur0211)
+⌨️ com ❤️ por [Arthur Amorim](https://github.com/arthur0211)

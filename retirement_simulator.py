@@ -1,3 +1,13 @@
+# =============================================================================
+# SIMULADOR AVANÇADO DE APOSENTADORIA
+# =============================================================================
+# Autor: Arthur Amorim
+# Descrição: Aplicativo Streamlit para simulação financeira de aposentadoria
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. IMPORTAÇÃO DE BIBLIOTECAS
+# -----------------------------------------------------------------------------
 import streamlit as st
 import pandas as pd
 import datetime
@@ -8,7 +18,9 @@ import numpy as np
 from PIL import ImageColor
 import json
 
-# Configuração da página
+# -----------------------------------------------------------------------------
+# 2. CONFIGURAÇÃO DA PÁGINA
+# -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="Simulador Avançado de Aposentadoria",
     layout="wide",
@@ -20,7 +32,9 @@ st.set_page_config(
     }
 )
 
-# CSS personalizado para melhorar a interface
+# -----------------------------------------------------------------------------
+# 3. ESTILIZAÇÃO CSS
+# -----------------------------------------------------------------------------
 st.markdown(
     """
     <style>
@@ -132,14 +146,36 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# -----------------------------------------------------------------------------
+# 4. FUNÇÃO PRINCIPAL
+# -----------------------------------------------------------------------------
 def main():
+    # Inicialização do session_state
+    if 'initialized' not in st.session_state:
+        st.session_state.initialized = True
+        st.session_state.birth_date = datetime.date(1990, 1, 1)
+        st.session_state.total_investments_today = 10000.0
+        st.session_state.monthly_investment = 500.0
+        st.session_state.annual_rate_acc = 3.0
+        st.session_state.retirement_age = 65
+        st.session_state.life_expectancy = 90
+        st.session_state.annual_rate_ret = 3.0
+        st.session_state.strategy_mode = "Retirada Personalizada"
+        st.session_state.monthly_expenses = 4000.0
+        st.session_state.n_sources = 0
+
+    # -------------------------------------------------------------------------
+    # 4.1 INTERFACE PRINCIPAL
+    # -------------------------------------------------------------------------
     # Container principal com logo ou ícone
     with st.container():
         col1, col2, col3 = st.columns([1,3,1])
         with col2:
             st.title("🎯 Simulador Avançado de Aposentadoria")
     
-    # Card para importar/exportar configurações
+    # -------------------------------------------------------------------------
+    # 4.2 GERENCIAMENTO DE CONFIGURAÇÕES
+    # -------------------------------------------------------------------------
     with st.container():
         st.markdown("""
         <div class='stCard'>
@@ -151,18 +187,33 @@ def main():
         with col1:
             # Botão para exportar configurações
             if st.button("📤 Exportar Configurações", help="Salve suas configurações atuais em um arquivo JSON"):
+                # Preparar fontes de renda para exportação
+                income_sources_export = []
+                for i in range(st.session_state.n_sources):
+                    source = {
+                        "name": st.session_state[f"name_{i}"],
+                        "monthly_income": st.session_state[f"income_{i}"],
+                        "income_start_age": st.session_state[f"start_age_{i}"],
+                        "lifetime": st.session_state[f"lifetime_{i}"],
+                        "annual_rate": st.session_state[f"rate_{i}"]
+                    }
+                    if not source["lifetime"] and f"duration_{i}" in st.session_state:
+                        source["duration_years"] = st.session_state[f"duration_{i}"]
+                    income_sources_export.append(source)
+                
                 config = {
-                    "birth_date": str(birth_date) if 'birth_date' in locals() else None,
-                    "total_investments_today": total_investments_today if 'total_investments_today' in locals() else None,
-                    "monthly_investment": monthly_investment if 'monthly_investment' in locals() else None,
-                    "annual_rate_acc": annual_rate_acc if 'annual_rate_acc' in locals() else None,
-                    "retirement_age": retirement_age if 'retirement_age' in locals() else None,
-                    "life_expectancy": life_expectancy if 'life_expectancy' in locals() else None,
-                    "annual_rate_ret": annual_rate_ret if 'annual_rate_ret' in locals() else None,
-                    "strategy_mode": strategy_mode if 'strategy_mode' in locals() else None,
-                    "monthly_expenses": monthly_expenses if 'monthly_expenses' in locals() and strategy_mode == "Retirada Personalizada" else None,
-                    "strategy_type": strategy_type if 'strategy_type' in locals() and strategy_mode == "Retirada Baseada em Estratégia" else None,
-                    "income_sources": income_sources if 'income_sources' in locals() else []
+                    "birth_date": str(st.session_state.birth_date),
+                    "total_investments_today": st.session_state.total_investments_today,
+                    "monthly_investment": st.session_state.monthly_investment,
+                    "annual_rate_acc": st.session_state.annual_rate_acc,
+                    "retirement_age": st.session_state.retirement_age,
+                    "life_expectancy": st.session_state.life_expectancy,
+                    "annual_rate_ret": st.session_state.annual_rate_ret,
+                    "strategy_mode": st.session_state.strategy_mode,
+                    "monthly_expenses": st.session_state.monthly_expenses if st.session_state.strategy_mode == "Retirada Personalizada" else None,
+                    "strategy_type": st.session_state.get("strategy_type") if st.session_state.strategy_mode == "Retirada Baseada em Estratégia" else None,
+                    "n_sources": st.session_state.n_sources,
+                    "income_sources": income_sources_export
                 }
                 
                 json_str = json.dumps(config, indent=2, ensure_ascii=False)
@@ -179,51 +230,117 @@ def main():
             uploaded_file = st.file_uploader(
                 "📥 Importar Configurações",
                 type=['json'],
-                help="Carregue um arquivo JSON com suas configurações salvas"
+                help="Carregue um arquivo JSON com suas configurações salvas",
+                key="config_uploader"
             )
             
             if uploaded_file is not None:
                 try:
                     imported_config = json.loads(uploaded_file.getvalue())
-                    st.success("✅ Configurações importadas com sucesso!")
                     
-                    # Atualizar session state com as configurações importadas
-                    if imported_config.get("birth_date"):
-                        st.session_state['birth_date'] = datetime.datetime.strptime(imported_config["birth_date"], "%Y-%m-%d").date()
-                    if imported_config.get("total_investments_today"):
-                        st.session_state['total_investments_today'] = imported_config["total_investments_today"]
-                    if imported_config.get("monthly_investment"):
-                        st.session_state['monthly_investment'] = imported_config["monthly_investment"]
-                    if imported_config.get("annual_rate_acc"):
-                        st.session_state['annual_rate_acc'] = imported_config["annual_rate_acc"]
-                    if imported_config.get("retirement_age"):
-                        st.session_state['retirement_age'] = imported_config["retirement_age"]
-                    if imported_config.get("life_expectancy"):
-                        st.session_state['life_expectancy'] = imported_config["life_expectancy"]
-                    if imported_config.get("annual_rate_ret"):
-                        st.session_state['annual_rate_ret'] = imported_config["annual_rate_ret"]
-                    if imported_config.get("strategy_mode"):
-                        st.session_state['strategy_mode'] = imported_config["strategy_mode"]
-                    if imported_config.get("monthly_expenses"):
-                        st.session_state['monthly_expenses'] = imported_config["monthly_expenses"]
-                    if imported_config.get("strategy_type"):
-                        st.session_state['strategy_type'] = imported_config["strategy_type"]
+                    st.success("✅ Arquivo carregado com sucesso! Revise as configurações abaixo:")
                     
-                    # Atualizar fontes de renda
-                    if imported_config.get("income_sources"):
-                        st.session_state['n_sources'] = len(imported_config["income_sources"])
-                        for i, source in enumerate(imported_config["income_sources"]):
-                            st.session_state[f"name_{i}"] = source["name"]
-                            st.session_state[f"income_{i}"] = source["monthly_income"]
-                            st.session_state[f"start_age_{i}"] = source["income_start_age"]
-                            st.session_state[f"lifetime_{i}"] = source["lifetime"]
-                            if not source["lifetime"] and source["duration_years"]:
-                                st.session_state[f"duration_{i}"] = source["duration_years"]
-                            st.session_state[f"rate_{i}"] = source["annual_rate"]
+                    with st.expander("📋 Visualizar Configurações", expanded=True):
+                        st.write("**Dados Pessoais**")
+                        if imported_config.get("birth_date"):
+                            st.write(f"- Data de Nascimento: {imported_config['birth_date']}")
+                        
+                        st.write("\n**Fase de Acumulação**")
+                        if imported_config.get("total_investments_today"):
+                            st.write(f"- Investimentos Atuais: R$ {imported_config['total_investments_today']:,.2f}")
+                        if imported_config.get("monthly_investment"):
+                            st.write(f"- Investimento Mensal: R$ {imported_config['monthly_investment']:,.2f}")
+                        if imported_config.get("annual_rate_acc"):
+                            st.write(f"- Taxa Real Anual: {imported_config['annual_rate_acc']}%")
+                        
+                        st.write("\n**Fase de Aposentadoria**")
+                        if imported_config.get("retirement_age"):
+                            st.write(f"- Idade Alvo: {imported_config['retirement_age']} anos")
+                        if imported_config.get("life_expectancy"):
+                            st.write(f"- Expectativa de Vida: {imported_config['life_expectancy']} anos")
+                        if imported_config.get("annual_rate_ret"):
+                            st.write(f"- Taxa Real na Aposentadoria: {imported_config['annual_rate_ret']}%")
+                        
+                        st.write("\n**Estratégia de Retirada**")
+                        if imported_config.get("strategy_mode"):
+                            st.write(f"- Modo: {imported_config['strategy_mode']}")
+                            if imported_config['strategy_mode'] == "Retirada Personalizada":
+                                if imported_config.get("monthly_expenses"):
+                                    st.write(f"- Despesas Mensais: R$ {imported_config['monthly_expenses']:,.2f}")
+                            else:
+                                if imported_config.get("strategy_type"):
+                                    st.write(f"- Tipo: {imported_config['strategy_type']}")
+                        
+                        if imported_config.get("income_sources"):
+                            st.write("\n**Fontes de Renda**")
+                            for i, source in enumerate(imported_config["income_sources"], 1):
+                                st.write(f"\nFonte {i}: {source['name']}")
+                                st.write(f"- Renda Mensal: R$ {source['monthly_income']:,.2f}")
+                                st.write(f"- Início: {source['income_start_age']} anos")
+                                st.write(f"- Vitalícia: {'Sim' if source['lifetime'] else 'Não'}")
+                                if not source['lifetime'] and source.get('duration_years'):
+                                    st.write(f"- Duração: {source['duration_years']} anos")
+                                st.write(f"- Taxa Anual: {source['annual_rate']}%")
                     
-                    st.rerun()
+                    if st.button("🔄 Importar Configurações", key="import_config"):
+                        try:
+                            # Atualizar session state com as configurações importadas
+                            if imported_config.get("birth_date"):
+                                st.session_state.birth_date = datetime.datetime.strptime(imported_config["birth_date"], "%Y-%m-%d").date()
+                            
+                            if imported_config.get("total_investments_today"):
+                                st.session_state.total_investments_today = float(imported_config["total_investments_today"])
+                            
+                            if imported_config.get("monthly_investment"):
+                                st.session_state.monthly_investment = float(imported_config["monthly_investment"])
+                            
+                            if imported_config.get("annual_rate_acc"):
+                                st.session_state.annual_rate_acc = float(imported_config["annual_rate_acc"])
+                            
+                            if imported_config.get("retirement_age"):
+                                st.session_state.retirement_age = int(imported_config["retirement_age"])
+                            
+                            if imported_config.get("life_expectancy"):
+                                st.session_state.life_expectancy = int(imported_config["life_expectancy"])
+                            
+                            if imported_config.get("annual_rate_ret"):
+                                st.session_state.annual_rate_ret = float(imported_config["annual_rate_ret"])
+                            
+                            if imported_config.get("strategy_mode"):
+                                st.session_state.strategy_mode = str(imported_config["strategy_mode"])
+                            
+                            if imported_config.get("monthly_expenses"):
+                                st.session_state.monthly_expenses = float(imported_config["monthly_expenses"])
+                            
+                            if imported_config.get("strategy_type"):
+                                st.session_state.strategy_type = str(imported_config["strategy_type"])
+                            
+                            # Atualizar número de fontes de renda
+                            if imported_config.get("n_sources"):
+                                st.session_state.n_sources = int(imported_config["n_sources"])
+                            
+                            # Atualizar fontes de renda
+                            if imported_config.get("income_sources"):
+                                for i, source in enumerate(imported_config["income_sources"]):
+                                    st.session_state[f"name_{i}"] = str(source["name"])
+                                    st.session_state[f"income_{i}"] = float(source["monthly_income"])
+                                    st.session_state[f"start_age_{i}"] = int(source["income_start_age"])
+                                    st.session_state[f"lifetime_{i}"] = bool(source["lifetime"])
+                                    st.session_state[f"rate_{i}"] = float(source["annual_rate"])
+                                    if not source["lifetime"] and source.get("duration_years"):
+                                        st.session_state[f"duration_{i}"] = int(source["duration_years"])
+                            
+                            st.success("✅ Configurações importadas com sucesso!")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Erro ao importar configurações: {str(e)}")
+                            st.error("Por favor, tente novamente ou verifique o formato do arquivo.")
+                
                 except Exception as e:
-                    st.error(f"❌ Erro ao importar configurações: {str(e)}")
+                    st.error(f"❌ Erro ao carregar configurações: {str(e)}")
+                    st.error("Verifique se o arquivo está no formato correto.")
+            elif uploaded_file is None and 'config_loaded' in st.session_state:
+                del st.session_state['config_loaded']
         
         st.markdown("</div>", unsafe_allow_html=True)
     
@@ -245,7 +362,9 @@ def main():
         
         """, unsafe_allow_html=True)
 
-    # Organização da sidebar em seções com ícones
+    # -------------------------------------------------------------------------
+    # 4.3 INTERFACE DA BARRA LATERAL
+    # -------------------------------------------------------------------------
     with st.sidebar:
         st.sidebar.markdown("### 📊 Dados Pessoais")
         birth_date = st.date_input(
@@ -258,9 +377,9 @@ def main():
         st.sidebar.markdown("### 💰 Fase de Acumulação")
         total_investments_today = st.number_input(
             "Total de Investimentos Atual",
-            value=st.session_state.get('total_investments_today', 10000),
-            min_value=0,
-            step=100,
+            value=float(st.session_state.get('total_investments_today', 10000.0)),
+            min_value=0.0,
+            step=100.0,
             help="Valor total dos seus investimentos hoje",
             key='total_investments_today'
         )
@@ -269,9 +388,9 @@ def main():
         with col1:
             monthly_investment = st.number_input(
                 "Investimento Mensal",
-                value=st.session_state.get('monthly_investment', 500),
-                min_value=0,
-                step=50,
+                value=float(st.session_state.get('monthly_investment', 500.0)),
+                min_value=0.0,
+                step=50.0,
                 key='monthly_investment'
             )
         with col2:
@@ -321,9 +440,9 @@ def main():
         if strategy_mode == "Retirada Personalizada":
             monthly_expenses = st.number_input(
                 "Despesas Mensais Desejadas",
-                value=st.session_state.get('monthly_expenses', 4000),
-                min_value=0,
-                step=100,
+                value=st.session_state.get('monthly_expenses', 4000.0),
+                min_value=0.0,
+                step=100.0,
                 help="Quanto você planeja gastar mensalmente na aposentadoria",
                 key='monthly_expenses'
             )
@@ -349,29 +468,42 @@ def main():
         
         income_sources = []
         for i in range(int(n_sources)):
-            with st.expander(f"📋 Fonte de Renda {i+1}"):
-                name = st.text_input(f"Nome", value=f"Fonte {i+1}", key=f"name_{i}")
+            # Inicializar o nome da fonte no session_state se não existir
+            if f"name_{i}" not in st.session_state:
+                st.session_state[f"name_{i}"] = f"Fonte {i+1}"
+            
+            # Criar um expander com o nome atual da fonte
+            with st.expander(f"📋 {st.session_state[f'name_{i}']}"):
+                name = st.text_input(
+                    "Nome",
+                    value=st.session_state[f"name_{i}"],
+                    key=f"name_{i}"
+                )
                 monthly_income = st.number_input(
                     "Valor Mensal Inicial",
-                    value=1000,
-                    min_value=0,
-                    step=50,
+                    value=float(st.session_state.get(f"income_{i}", 1000.0)),
+                    min_value=0.0,
+                    step=50.0,
                     key=f"income_{i}"
                 )
                 income_start_age = st.number_input(
                     "Idade de Início",
-                    value=retirement_age,
-                    min_value=retirement_age,
+                    value=int(st.session_state.get(f"start_age_{i}", retirement_age)),
+                    min_value=int(retirement_age),
                     step=1,
                     key=f"start_age_{i}"
                 )
-                lifetime = st.checkbox("Renda Vitalícia", value=True, key=f"lifetime_{i}")
+                lifetime = st.checkbox(
+                    "Renda Vitalícia",
+                    value=bool(st.session_state.get(f"lifetime_{i}", True)),
+                    key=f"lifetime_{i}"
+                )
                 
                 duration_years = None
                 if not lifetime:
                     duration_years = st.number_input(
                         "Duração (anos)",
-                        value=10,
+                        value=int(st.session_state.get(f"duration_{i}", 10)),
                         min_value=1,
                         step=1,
                         key=f"duration_{i}"
@@ -379,7 +511,7 @@ def main():
                 
                 annual_rate_source = st.number_input(
                     "Taxa Real Anual (%)",
-                    value=0.0,
+                    value=float(st.session_state.get(f"rate_{i}", 0.0)),
                     step=0.1,
                     key=f"rate_{i}"
                 )
@@ -395,9 +527,9 @@ def main():
                     "monthly_rate": monthly_rate_source
                 })
 
-    ##############################
-    # Cálculos Básicos e Validações
-    ##############################
+    # -------------------------------------------------------------------------
+    # 4.4 CÁLCULOS BÁSICOS E VALIDAÇÕES
+    # -------------------------------------------------------------------------
     today = datetime.date.today()
     current_age = (today - birth_date).days / 365.25
     
@@ -446,9 +578,9 @@ def main():
     monthly_rate_acc = (1 + annual_rate_acc/100)**(1/12) - 1
     monthly_rate_ret = (1 + annual_rate_ret/100)**(1/12) - 1
     
-    ##############################
-    # Simulação da Fase de Acumulação
-    ##############################
+    # -------------------------------------------------------------------------
+    # 4.5 SIMULAÇÃO DA FASE DE ACUMULAÇÃO
+    # -------------------------------------------------------------------------
     ages = []
     portfolio_balances = []
     net_cash_flows = []           # (Usado somente no modo "Retirada Personalizada" na aposentadoria)
@@ -466,9 +598,9 @@ def main():
     
     portfolio_at_retirement = balance
     
-    ##############################
-    # Simulação da Fase de Aposentadoria
-    ##############################
+    # -------------------------------------------------------------------------
+    # 4.6 SIMULAÇÃO DA FASE DE APOSENTADORIA
+    # -------------------------------------------------------------------------
     retire_ages = []
     retire_portfolio = []
     retire_net_withdrawals = []
@@ -565,15 +697,18 @@ def main():
         "Renda Adicional (R$)": sim_add_income
     })
     
-    ##############################
-    # Visualização dos Resultados
-    ##############################
+    # -------------------------------------------------------------------------
+    # 4.7 VISUALIZAÇÃO DOS RESULTADOS
+    # -------------------------------------------------------------------------
     tab1, tab2, tab3 = st.tabs([
         "📈 Gráfico da Simulação",
         "📋 Resumo Detalhado",
         "💾 Download dos Dados"
     ])
     
+    # -------------------------------------------------------------------------
+    # 4.7.1 ABA DE GRÁFICOS
+    # -------------------------------------------------------------------------
     with tab1:
         st.markdown("<div class='stCard'>", unsafe_allow_html=True)
         st.subheader("📈 Evolução do Patrimônio")
@@ -755,7 +890,7 @@ def main():
             })
             total_income += np.array(source_income)
         
-        # Criar gráfico de área empilhada
+        # Criar gráfico de barras empilhadas
         fig_income = go.Figure()
         
         # Área sombreada para fase de aposentadoria
@@ -769,30 +904,17 @@ def main():
             annotation_position="top left"
         )
         
-        # Adicionar cada fonte de renda como área
+        # Adicionar cada fonte de renda como barra empilhada
         for source in income_data:
-            fig_income.add_trace(go.Scatter(
+            fig_income.add_trace(go.Bar(
                 x=source['ages'],
                 y=source['values'],
                 name=source['name'],
-                mode='none',
-                fill='tonexty',
-                fillcolor=f"rgba{tuple(list(ImageColor.getrgb(source['color'])) + [0.6])}",
-                line=dict(width=0),
+                marker_color=source['color'],
                 hovertemplate='Idade: %{x:.1f} anos<br>Renda: R$ %{y:,.2f}<extra></extra>'
             ))
         
-        # Adicionar linha do total
-        fig_income.add_trace(go.Scatter(
-            x=ages_range,
-            y=total_income,
-            name='Renda Total',
-            mode='lines',
-            line=dict(color='#2c3e50', width=2, dash='dash'),
-            hovertemplate='Idade: %{x:.1f} anos<br>Total: R$ %{y:,.2f}<extra></extra>'
-        ))
-        
-        # Configuração do layout
+        # Configuração do layout para barras empilhadas
         fig_income.update_layout(
             title={
                 'text': "Composição da Renda ao Longo do Tempo",
@@ -813,8 +935,21 @@ def main():
                 x=0.01,
                 bgcolor='rgba(255,255,255,0.8)'
             ),
-            margin=dict(l=60, r=30, t=80, b=60)
+            margin=dict(l=60, r=30, t=80, b=60),
+            barmode='stack',  # Define o modo de empilhamento das barras
+            bargap=0,  # Remove o espaço entre as barras
+            bargroupgap=0  # Remove o espaço entre grupos de barras
         )
+        
+        # Adicionar linha do total
+        fig_income.add_trace(go.Scatter(
+            x=ages_range,
+            y=total_income,
+            name='Renda Total',
+            mode='lines',
+            line=dict(color='#2c3e50', width=2, dash='dash'),
+            hovertemplate='Idade: %{x:.1f} anos<br>Total: R$ %{y:,.2f}<extra></extra>'
+        ))
         
         st.plotly_chart(fig_income, use_container_width=True)
         
@@ -835,6 +970,9 @@ def main():
         
         st.markdown("</div>", unsafe_allow_html=True)
     
+    # -------------------------------------------------------------------------
+    # 4.7.2 ABA DE RESUMO
+    # -------------------------------------------------------------------------
     with tab2:
         st.markdown("<div class='stCard'>", unsafe_allow_html=True)
         st.subheader("📊 Análise Detalhada")
@@ -877,6 +1015,9 @@ def main():
         
         st.markdown("</div>", unsafe_allow_html=True)
     
+    # -------------------------------------------------------------------------
+    # 4.7.3 ABA DE DOWNLOAD
+    # -------------------------------------------------------------------------
     with tab3:
         st.markdown("<div class='stCard'>", unsafe_allow_html=True)
         st.subheader("💾 Download dos Dados")
@@ -910,7 +1051,9 @@ def main():
         
         st.markdown("</div>", unsafe_allow_html=True)
     
-    # Mensagem final
+    # -------------------------------------------------------------------------
+    # 4.8 MENSAGEM FINAL
+    # -------------------------------------------------------------------------
     st.markdown("""
     <div class='stCard' style='text-align: center;'>
         <h3>🎯 Planejamento Concluído!</h3>
@@ -918,5 +1061,8 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
+# -----------------------------------------------------------------------------
+# 5. EXECUÇÃO PRINCIPAL
+# -----------------------------------------------------------------------------
 if __name__ == '__main__':
     main()
