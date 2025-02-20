@@ -112,9 +112,8 @@ Para sugerir melhorias:
 Se você tiver alguma dúvida sobre como contribuir, sinta-se à vontade para:
 
 1. Abrir uma issue
-2. Enviar um email para [seu-email@exemplo.com]
-3. Entrar em contato através do [canal de comunicação preferido]
+2. Enviar um email para arthur._amorim@outlook.com
 
 ---
 
-Agradecemos sua contribuição! 🙏 
+Agradecemos sua contribuição!  
