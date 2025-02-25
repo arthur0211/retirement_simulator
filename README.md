@@ -125,9 +125,9 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 
 - **Arthur Amorim** - *Desenvolvimento Inicial* - [@arthur0211](https://github.com/arthur0211)
 
-## 📞 Suporte
+## Suporte
 
 - Abra uma [Issue](https://github.com/arthur0211/retirement_simulator/issues)
 
 ---
-⌨️ com ❤️ por [Arthur Amorim](https://github.com/arthur0211)
+⌨️ por [Arthur Amorim](https://github.com/arthur0211)
